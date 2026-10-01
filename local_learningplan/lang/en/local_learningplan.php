@@ -342,3 +342,5 @@ $string['learnerstatus'] = 'Learner Status - 2025';
 $string['viewstatusdashboard'] = 'View Status Dashboard';
 $string['last21days'] = 'last 21 days';
 $string['switchtovisualdashboard'] = 'Switch to Visual Dashboard';
+$string['misreport'] = 'Management Information System (MIS) Report';
+$string['downloadmisreport'] = 'Download MIS Report';

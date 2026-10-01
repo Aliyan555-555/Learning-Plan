@@ -1908,21 +1908,15 @@ class api {
     }
 
     /**
-     * Generate and download the executive MIS report in .xlsx format matching the exact template.
+     * Get compiled MIS report data records across plans, learners, and user profile fields.
      *
      * @param int $filterplanid Optional plan ID filter (0 for all plans)
      * @param int $days Number of days for active/inactive window (default 21)
-     * @return void Exits script after sending file download
+     * @param array $filters Additional filters: 'search', 'status', 'active21', 'department'
+     * @return array Array of record objects
      */
-    public static function export_mis_report(int $filterplanid = 0, int $days = 21): void {
-        global $CFG, $DB;
-
-        require_once($CFG->libdir . '/excellib.class.php');
-
-        // Clean any output buffer before generating binary stream.
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
+    public static function get_mis_report_data(int $filterplanid = 0, int $days = 21, array $filters = []): array {
+        global $DB;
 
         $now = time();
         $timesince = $now - ($days * 86400);
@@ -1952,8 +1946,7 @@ class api {
             }
         }
 
-        // Build report data rows.
-        $rows = [];
+        $records = [];
 
         foreach ($plans as $plan) {
             $planid = (int)$plan->id;
@@ -2120,30 +2113,124 @@ class api {
                 $empcode = !empty($user->idnumber) ? $user->idnumber : ($cf['employeecode'] ?? $cf['employee_code'] ?? '');
                 $email = $user->email;
 
-                $rows[] = [
-                    'B' => format_string($plan->name),
-                    'C' => fullname($user),
-                    'D' => $chapstr,
-                    'E' => $stepstr,
-                    'F' => $planstatus,
-                    'G' => $modesoftraining,
-                    'H' => $startenddate,
-                    'I' => $activelast21days,
-                    'J' => $userplanstatus,
-                    'K' => $completionpct,
-                    'L' => $points,
-                    'M' => $stars,
-                    'N' => $badgescount,
-                    'O' => $dept,
-                    'P' => $jobpos,
-                    'Q' => $region,
-                    'R' => $city,
-                    'S' => $branch,
-                    'T' => $lob,
-                    'U' => $empcode,
-                    'V' => $email,
+                // Apply optional filters.
+                if (!empty($filters['status'])) {
+                    $filterstatusnorm = strtolower(str_replace(['-', ' '], '', $filters['status']));
+                    $userstatusnorm = strtolower(str_replace(['-', ' '], '', $userplanstatus));
+                    if ($filterstatusnorm !== $userstatusnorm) {
+                        continue;
+                    }
+                }
+
+                if (!empty($filters['active21'])) {
+                    if (strtolower($filters['active21']) !== strtolower($activelast21days)) {
+                        continue;
+                    }
+                }
+
+                if (!empty($filters['department'])) {
+                    if (strcasecmp($dept, $filters['department']) !== 0) {
+                        continue;
+                    }
+                }
+
+                if (!empty($filters['search'])) {
+                    $kw = mb_strtolower(trim($filters['search']));
+                    $searchhaystack = mb_strtolower(fullname($user) . ' ' . $user->email . ' ' . $user->username . ' ' . $empcode . ' ' . $plan->name . ' ' . $dept . ' ' . $city);
+                    if (mb_strpos($searchhaystack, $kw) === false) {
+                        continue;
+                    }
+                }
+
+                $record = (object)[
+                    'planid' => $planid,
+                    'planname' => format_string($plan->name),
+                    'planstatus' => $planstatus,
+                    'isplanactive' => $isplanactive,
+                    'totalchapters' => $totalchapters,
+                    'totalsteps' => $totalsteps,
+                    'completedchapters' => $completedchapters,
+                    'completedsteps' => $totals->completedsteps,
+                    'chapters_str' => $chapstr,
+                    'steps_str' => $stepstr,
+                    'trainingmodes' => $modesoftraining,
+                    'starttimestamp' => $starttimestamp,
+                    'endtimestamp' => $plan->enddate,
+                    'startenddate' => $startenddate,
+                    'userid' => $uid,
+                    'user' => $user,
+                    'fullname' => fullname($user),
+                    'email' => $email,
+                    'isrecent' => $isrecent,
+                    'activelast21days' => $activelast21days,
+                    'userstatus' => $userplanstatus,
+                    'completionpct' => (int)$totals->percent,
+                    'completionpct_str' => $completionpct,
+                    'points' => $points,
+                    'stars' => $stars,
+                    'badgescount' => $badgescount,
+                    'department' => $dept,
+                    'jobposition' => $jobpos,
+                    'region' => $region,
+                    'city' => $city,
+                    'branch' => $branch,
+                    'lineofbusiness' => $lob,
+                    'employeecode' => $empcode,
                 ];
+
+                $records[] = $record;
             }
+        }
+
+        return $records;
+    }
+
+    /**
+     * Generate and download the executive MIS report in .xlsx format matching the exact template.
+     *
+     * @param int $filterplanid Optional plan ID filter (0 for all plans)
+     * @param int $days Number of days for active/inactive window (default 21)
+     * @param array $filters Additional filters: 'search', 'status', 'active21', 'department'
+     * @return void Exits script after sending file download
+     */
+    public static function export_mis_report(int $filterplanid = 0, int $days = 21, array $filters = []): void {
+        global $CFG, $DB;
+
+        require_once($CFG->libdir . '/excellib.class.php');
+
+        // Clean any output buffer before generating binary stream.
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Fetch compiled data records.
+        $data = self::get_mis_report_data($filterplanid, $days, $filters);
+
+        $rows = [];
+        foreach ($data as $d) {
+            $rows[] = [
+                'B' => $d->planname,
+                'C' => $d->fullname,
+                'D' => $d->chapters_str,
+                'E' => $d->steps_str,
+                'F' => $d->planstatus,
+                'G' => $d->trainingmodes,
+                'H' => $d->startenddate,
+                'I' => $d->activelast21days,
+                'J' => $d->userstatus,
+                'K' => $d->completionpct_str,
+                'L' => $d->points,
+                'M' => $d->stars,
+                'N' => $d->badgescount,
+                'O' => $d->department,
+                'P' => $d->jobposition,
+                'Q' => $d->region,
+                'R' => $d->city,
+                'S' => $d->branch,
+                'T' => $d->lineofbusiness,
+                'U' => $d->employeecode,
+                'V' => $d->email,
+            ];
         }
 
         // Locate template file.
@@ -2247,8 +2334,8 @@ class api {
         }
 
         // Send headers for download.
-        if ($filterplanid > 0 && !empty($plans) && !empty($plans[0]->name)) {
-            $downloadfilename = 'MIS Report - ' . clean_filename($plans[0]->name) . '.xlsx';
+        if ($filterplanid > 0 && !empty($data) && !empty($data[0]->planname)) {
+            $downloadfilename = 'MIS Report - ' . clean_filename($data[0]->planname) . '.xlsx';
         } else {
             $downloadfilename = 'MIS Report for Learning Plan.xlsx';
         }

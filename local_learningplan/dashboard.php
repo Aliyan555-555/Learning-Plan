@@ -160,7 +160,7 @@ $totalusers = $DB->count_records('user', ['deleted' => 0]);
 
             <!-- Action Buttons -->
             <div class="lp-hero-actions">
-                <a href="<?php echo new moodle_url($pageurl, ['exportmis' => 1, 'sesskey' => sesskey()]); ?>" class="lp-btn-hero-action lp-btn-mis-action" title="Download MIS Report (.xlsx)">
+                <a href="<?php echo new moodle_url('/local/learningplan/mis_report.php', $planid ? ['planid' => $planid] : []); ?>" class="lp-btn-hero-action lp-btn-mis-action" title="View & Download Comprehensive MIS Report">
                     <i class="fa fa-file-excel-o mr-1 text-success"></i><span><?php echo local_learningplan_str('downloadmisreport', 'Download MIS Report'); ?></span>
                 </a>
                 <a href="<?php echo new moodle_url($pageurl, ['export' => 1, 'sesskey' => sesskey()]); ?>" class="lp-btn-hero-action" title="Export CSV Summary">
