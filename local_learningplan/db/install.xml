@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/learningplan/db" VERSION="20260821" COMMENT="XMLDB file for Moodle local/learningplan"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+
+    <TABLE NAME="local_learningplan_plan" COMMENT="Learning plan header record">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="coverimage" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="startdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enddate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="progressionmode" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="sequential" SEQUENCE="false" COMMENT="sequential or open"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_chapter" COMMENT="Themed grouping of steps within a plan">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="rewardbadgeid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid" TYPE="foreign" FIELDS="planid" REFTABLE="local_learningplan_plan" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="planid_sortorder" UNIQUE="false" FIELDS="planid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_step" COMMENT="A single level/node inside a chapter">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="chapterid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="steptype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="course, activity, file, url"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="url" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fileid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="points" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="10" SEQUENCE="false"/>
+        <FIELD NAME="maxstars" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="3" SEQUENCE="false"/>
+        <FIELD NAME="starcriteria" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON thresholds"/>
+        <FIELD NAME="icon" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid" TYPE="foreign" FIELDS="planid" REFTABLE="local_learningplan_plan" REFFIELDS="id"/>
+        <KEY NAME="chapterid" TYPE="foreign" FIELDS="chapterid" REFTABLE="local_learningplan_chapter" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="chapterid_sortorder" UNIQUE="false" FIELDS="chapterid, sortorder"/>
+        <INDEX NAME="courseid" UNIQUE="false" FIELDS="courseid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_assignment" COMMENT="Which learners/cohorts/groups a plan is assigned to">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="cohortid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="assignedby" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timeassigned" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid" TYPE="foreign" FIELDS="planid" REFTABLE="local_learningplan_plan" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="planid_userid" UNIQUE="false" FIELDS="planid, userid"/>
+        <INDEX NAME="cohortid" UNIQUE="false" FIELDS="cohortid"/>
+        <INDEX NAME="groupid" UNIQUE="false" FIELDS="groupid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_progress" COMMENT="Per-learner per-step status, the core tracking table">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="stepid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="locked" SEQUENCE="false"/>
+        <FIELD NAME="starsearned" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="pointsawarded" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="verifiedby" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="moodle" SEQUENCE="false" COMMENT="moodle or self"/>
+        <FIELD NAME="timestarted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="stepid" TYPE="foreign" FIELDS="stepid" REFTABLE="local_learningplan_step" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="stepid_userid" UNIQUE="true" FIELDS="stepid, userid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_points_log" COMMENT="Audit trail of every point transaction">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="stepid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="points" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reason" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_planid" UNIQUE="false" FIELDS="userid, planid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_badge" COMMENT="Links a plan/chapter completion to a core Moodle badge">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="chapterid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="badgeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="criteria" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="plan_complete or chapter_complete"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid" TYPE="foreign" FIELDS="planid" REFTABLE="local_learningplan_plan" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_enrol" COMMENT="Audit of course enrolments created automatically from a learning plan assignment">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="enrol instance row used, null if the user was already enrolled by another method"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid" TYPE="foreign" FIELDS="planid" REFTABLE="local_learningplan_plan" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="planid_courseid_userid" UNIQUE="true" FIELDS="planid, courseid, userid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_learningplan_icon" COMMENT="Central reusable gallery icons and animated GIFs">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="filename" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="mimetype" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="image/png" SEQUENCE="false"/>
+        <FIELD NAME="filesize" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="category" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="general" SEQUENCE="false" COMMENT="general, plans, steps, badges, animated"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="category" UNIQUE="false" FIELDS="category"/>
+      </INDEXES>
+    </TABLE>
+
+  </TABLES>
+</XMLDB>

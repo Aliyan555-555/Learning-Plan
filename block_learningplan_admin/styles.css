@@ -1,0 +1,1034 @@
+/**
+ * Theme-Adaptive Modern Styles for Learning Plans Admin Block (block_learningplan_admin).
+ * Automatically adapts to any Moodle theme (Boost, Classic, Moove, Adaptable, Trema, etc.)
+ * Fully supports Dark Mode and custom brand colors via Moodle CSS variables.
+ */
+
+.block-learningplan-admin {
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--bs-body-color, var(--text-color, inherit));
+    width: 100%;
+}
+
+/* ==========================================================================
+   Segmented Tab Navigation Switcher
+   ========================================================================== */
+.block-learningplan-admin .lpa-tab-nav {
+    display: flex;
+    align-items: center;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.05));
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: var(--bs-border-radius, 10px);
+    padding: 3px;
+    margin-bottom: 12px;
+    gap: 3px;
+}
+
+.block-learningplan-admin .lpa-tab-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    border-radius: var(--bs-border-radius-sm, 7px);
+    color: var(--bs-secondary-color, var(--text-muted, #64748b));
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    outline: none !important;
+}
+
+.block-learningplan-admin .lpa-tab-btn:hover {
+    color: var(--bs-heading-color, var(--bs-body-color, #1e293b));
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.block-learningplan-admin .lpa-tab-btn.active {
+    background: var(--bs-card-bg, var(--card-bg, #ffffff));
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+    box-shadow: var(--bs-box-shadow-sm, 0 1px 4px rgba(0, 0, 0, 0.08));
+}
+
+/* Tab Panels */
+.block-learningplan-admin .lpa-tab-panel {
+    display: none;
+    animation: lpaFadeIn 0.22s ease-in-out;
+}
+
+.block-learningplan-admin .lpa-tab-panel.active {
+    display: block;
+}
+
+@keyframes lpaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   General Section & Card Components
+   ========================================================================== */
+.block-learningplan-admin .lpa-section {
+    margin-bottom: 12px;
+}
+
+.block-learningplan-admin .lpa-section:last-child {
+    margin-bottom: 0;
+}
+
+.block-learningplan-admin .lpa-section-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Call To Action Button */
+.block-learningplan-admin .lpa-create-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none !important;
+    border-radius: var(--bs-border-radius, 10px);
+    transition: all 0.2s ease;
+}
+
+/* Quick Navigation Grid */
+.block-learningplan-admin .lpa-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+.block-learningplan-admin .lpa-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--bs-card-bg, var(--bs-secondary-bg, rgba(0, 0, 0, 0.03)));
+    border: 1px solid var(--bs-card-border-color, var(--bs-border-color, rgba(0, 0, 0, 0.08)));
+    border-radius: var(--bs-border-radius, 10px);
+    color: var(--bs-heading-color, var(--bs-body-color, inherit));
+    text-decoration: none !important;
+    font-size: 0.78rem;
+    font-weight: 700;
+    transition: all 0.18s ease;
+}
+
+.block-learningplan-admin .lpa-nav-item:hover {
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.06));
+    border-color: var(--bs-primary, var(--primary, #0f6cbf));
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+}
+
+.block-learningplan-admin .lpa-emoji {
+    font-size: 1.05rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   KPI Stats Grid
+   ========================================================================== */
+.block-learningplan-admin .lpa-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.block-learningplan-admin .lpa-stat-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--bs-card-bg, var(--card-bg, #ffffff));
+    border: 1px solid var(--bs-card-border-color, var(--bs-border-color, rgba(0, 0, 0, 0.08)));
+    border-radius: var(--bs-border-radius, 12px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+}
+
+.block-learningplan-admin .lpa-stat-card:hover {
+    border-color: var(--bs-primary, var(--primary, #0f6cbf));
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.block-learningplan-admin .lpa-stat-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-stat-plans .lpa-stat-icon {
+    background: rgba(var(--bs-primary-rgb, 15, 108, 191), 0.12);
+}
+.block-learningplan-admin .lpa-stat-learners .lpa-stat-icon {
+    background: rgba(var(--bs-info-rgb, 13, 202, 240), 0.12);
+}
+.block-learningplan-admin .lpa-stat-points .lpa-stat-icon {
+    background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.15);
+}
+.block-learningplan-admin .lpa-stat-completion .lpa-stat-icon {
+    background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.12);
+}
+
+.block-learningplan-admin .lpa-stat-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.block-learningplan-admin .lpa-stat-value {
+    font-size: 1.12rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--bs-heading-color, var(--bs-body-color, inherit));
+}
+
+.block-learningplan-admin .lpa-text-points {
+    color: var(--bs-warning-text-emphasis, var(--bs-warning, #d97706));
+}
+.block-learningplan-admin .lpa-text-completion {
+    color: var(--bs-success, var(--success, #198754));
+}
+
+.block-learningplan-admin .lpa-stat-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+    margin: 1px 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.block-learningplan-admin .lpa-stat-sub {
+    font-size: 0.68rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    align-items: center;
+}
+
+.block-learningplan-admin .lpa-stat-sub-pill {
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.65rem;
+}
+.block-learningplan-admin .lpa-sub-success {
+    background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.12);
+    color: var(--bs-success, var(--success, #198754));
+}
+.block-learningplan-admin .lpa-sub-muted {
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.06));
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+}
+
+.block-learningplan-admin .lpa-stat-sub-text {
+    font-weight: 600;
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+}
+
+.block-learningplan-admin .lpa-stars-badge {
+    font-weight: 700;
+    color: var(--bs-warning-text-emphasis, var(--bs-warning, #b45309));
+}
+
+.block-learningplan-admin .lpa-mini-progress {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.08));
+    overflow: hidden;
+    width: 100%;
+    margin-top: 4px;
+}
+.block-learningplan-admin .lpa-mini-progress .progress-bar {
+    background: var(--bs-success, var(--success, #198754));
+    border-radius: 999px;
+}
+
+
+/* Recent Plans List */
+.block-learningplan-admin .lpa-plans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.block-learningplan-admin .lpa-plan-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bs-card-bg, var(--card-bg, var(--bs-body-bg, #ffffff)));
+    border: 1px solid var(--bs-card-border-color, var(--bs-border-color, rgba(0, 0, 0, 0.1)));
+    border-radius: var(--bs-border-radius, 12px);
+    transition: all 0.2s ease;
+}
+
+.block-learningplan-admin .lpa-plan-row:hover {
+    border-color: var(--bs-primary, var(--primary, #0f6cbf));
+    box-shadow: var(--bs-box-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.04));
+    transform: translateY(-1px);
+}
+
+.block-learningplan-admin .lpa-plan-row.lpa-plan-draft {
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.02));
+    border-style: dashed;
+}
+
+.block-learningplan-admin .lpa-plan-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.block-learningplan-admin .lpa-plan-header-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.block-learningplan-admin .lpa-row-theme-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-plan-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--bs-heading-color, var(--bs-body-color, inherit));
+    text-decoration: none !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    transition: color 0.18s ease;
+}
+
+.block-learningplan-admin .lpa-plan-name:hover {
+    color: var(--bs-link-hover-color, var(--bs-primary, var(--primary, #0f6cbf)));
+}
+
+.block-learningplan-admin .lpa-plan-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.block-learningplan-admin .lpa-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--bs-border-radius-pill, 999px);
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.05));
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08));
+}
+
+.block-learningplan-admin .lpa-pill-visible {
+    background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.12);
+    border-color: rgba(var(--bs-success-rgb, 25, 135, 84), 0.25);
+    color: var(--bs-success, var(--success, #198754));
+}
+
+.block-learningplan-admin .lpa-pill-hidden {
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.06));
+    border-color: var(--bs-border-color, rgba(0, 0, 0, 0.1));
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+}
+
+/* Action Icon Buttons */
+.block-learningplan-admin .lpa-plan-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--bs-border-radius-pill, 999px);
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08));
+    text-decoration: none !important;
+    font-size: 0.92rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.block-learningplan-admin .lpa-action-btn:hover {
+    background: var(--bs-primary, var(--primary, #0f6cbf));
+    border-color: var(--bs-primary, var(--primary, #0f6cbf));
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb, 15, 108, 191), 0.3);
+}
+
+/* Learner View (Fallback) */
+.block-learningplan-admin .lpa-learner-plans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.block-learningplan-admin .lpa-learner-plan-card {
+    background: var(--bs-card-bg, var(--card-bg, var(--bs-body-bg, #ffffff)));
+    border: 1px solid var(--bs-card-border-color, var(--bs-border-color, rgba(0, 0, 0, 0.1)));
+    border-radius: var(--bs-border-radius-lg, 14px);
+    padding: 14px 16px;
+    box-shadow: var(--bs-box-shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.03));
+}
+
+.block-learningplan-admin .lpa-learner-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.block-learningplan-admin .lpa-percent-pill {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+    background: rgba(var(--bs-primary-rgb, 15, 108, 191), 0.12);
+    border: 1px solid rgba(var(--bs-primary-rgb, 15, 108, 191), 0.25);
+    padding: 2px 8px;
+    border-radius: var(--bs-border-radius-pill, 999px);
+    flex-shrink: 0;
+}
+
+/* Learner Button */
+.block-learningplan-admin .lpa-learner-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+
+.block-learningplan-admin .lpa-empty-text {
+    padding: 14px;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.03));
+    border: 2px dashed var(--bs-border-color, rgba(0, 0, 0, 0.15));
+    border-radius: var(--bs-border-radius, 10px);
+    text-align: center;
+    color: var(--bs-secondary-color, var(--text-muted, #6c757d));
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Visual Analytics & Chart Graphics
+   ========================================================================== */
+.block-learningplan-admin .lpa-analytics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Sub-Tab Navigation for Analytics Views */
+.block-learningplan-admin .lpa-subtab-nav {
+    display: flex;
+    align-items: center;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+    border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.06));
+    border-radius: var(--bs-border-radius-sm, 8px);
+    padding: 2px;
+    gap: 2px;
+    overflow-x: auto;
+}
+
+.block-learningplan-admin .lpa-subtab-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--bs-secondary-color, var(--text-muted, #64748b));
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.block-learningplan-admin .lpa-subtab-btn:hover {
+    color: var(--bs-heading-color, #1e293b);
+}
+
+.block-learningplan-admin .lpa-subtab-btn.active {
+    background: var(--bs-card-bg, #ffffff);
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.block-learningplan-admin .lpa-subtab-panel {
+    display: none;
+    animation: lpaFadeIn 0.2s ease-in-out;
+}
+
+.block-learningplan-admin .lpa-subtab-panel.active {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.block-learningplan-admin .lpa-chart-card {
+    background: var(--bs-card-bg, var(--card-bg, #ffffff));
+    border: 1px solid var(--bs-card-border-color, var(--bs-border-color, rgba(0, 0, 0, 0.08)));
+    border-radius: var(--bs-border-radius, 12px);
+    padding: 10px 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+}
+
+.block-learningplan-admin .lpa-chart-card:hover {
+    border-color: var(--bs-primary, var(--primary, #0f6cbf));
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.block-learningplan-admin .lpa-chart-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.block-learningplan-admin .lpa-chart-card-title {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--bs-heading-color, var(--bs-body-color, inherit));
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+
+.block-learningplan-admin .lpa-chart-header-row .lpa-chart-card-title {
+    margin-bottom: 0;
+}
+
+.block-learningplan-admin .lpa-chart-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(var(--bs-primary-rgb, 15, 108, 191), 0.1);
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+}
+
+/* ==========================================================================
+   Retention Health & Risk Bars
+   ========================================================================== */
+.block-learningplan-admin .lpa-health-bar-wrapper {
+    display: flex;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.08));
+    margin-bottom: 8px;
+    gap: 1px;
+}
+
+.block-learningplan-admin .lpa-health-seg {
+    height: 100%;
+    transition: width 0.4s ease;
+}
+.block-learningplan-admin .lpa-health-act {
+    background: #10b981;
+}
+.block-learningplan-admin .lpa-health-mod {
+    background: #eab308;
+}
+.block-learningplan-admin .lpa-health-risk {
+    background: #ef4444;
+}
+
+.block-learningplan-admin .lpa-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.block-learningplan-admin .lpa-health-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+}
+
+.block-learningplan-admin .lpa-health-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-dot-warning {
+    background: #eab308;
+    box-shadow: 0 0 4px rgba(234, 179, 8, 0.4);
+}
+.block-learningplan-admin .lpa-dot-danger {
+    background: #ef4444;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+}
+
+.block-learningplan-admin .lpa-health-name {
+    flex: 1;
+    color: var(--bs-secondary-color, var(--text-muted, #64748b));
+}
+
+.block-learningplan-admin .lpa-health-val {
+    font-weight: 700;
+    color: var(--bs-heading-color, inherit);
+}
+
+.block-learningplan-admin .lpa-text-danger {
+    color: #ef4444 !important;
+}
+
+.block-learningplan-admin .lpa-inline-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.73rem;
+    font-weight: 700;
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+    text-decoration: none !important;
+    transition: all 0.15s ease;
+}
+.block-learningplan-admin .lpa-inline-link:hover {
+    text-decoration: underline !important;
+}
+
+/* ==========================================================================
+   Funnel & Mastery Tracks
+   ========================================================================== */
+.block-learningplan-admin .lpa-funnel-list,
+.block-learningplan-admin .lpa-mastery-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.block-learningplan-admin .lpa-funnel-row,
+.block-learningplan-admin .lpa-mastery-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.block-learningplan-admin .lpa-funnel-header,
+.block-learningplan-admin .lpa-mastery-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.72rem;
+}
+
+.block-learningplan-admin .lpa-funnel-lbl,
+.block-learningplan-admin .lpa-mastery-stars {
+    font-weight: 600;
+    color: var(--bs-heading-color, inherit);
+}
+
+.block-learningplan-admin .lpa-funnel-val,
+.block-learningplan-admin .lpa-mastery-val {
+    font-weight: 700;
+    color: var(--bs-secondary-color, var(--text-muted, #64748b));
+}
+
+.block-learningplan-admin .lpa-funnel-track,
+.block-learningplan-admin .lpa-mastery-track {
+    width: 100%;
+    height: 5px;
+    background: var(--bs-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.block-learningplan-admin .lpa-funnel-fill,
+.block-learningplan-admin .lpa-mastery-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.block-learningplan-admin .lpa-fnl-1 { background: #3b82f6; }
+.block-learningplan-admin .lpa-fnl-2 { background: #0ea5e9; }
+.block-learningplan-admin .lpa-fnl-3 { background: #10b981; }
+.block-learningplan-admin .lpa-fnl-4 { background: #059669; }
+
+
+/* Donut Progress Breakdown */
+.block-learningplan-admin .lpa-donut-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.block-learningplan-admin .lpa-donut-ring-box {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.block-learningplan-admin .lpa-donut-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.block-learningplan-admin .lpa-donut-bg {
+    stroke: var(--bs-secondary-bg, rgba(0, 0, 0, 0.08));
+}
+
+.block-learningplan-admin .lpa-donut-seg {
+    transition: stroke-dashoffset 0.6s ease, stroke-dasharray 0.6s ease;
+}
+
+.block-learningplan-admin .lpa-donut-locked {
+    stroke: var(--bs-secondary-bg, #cbd5e1);
+}
+
+.block-learningplan-admin .lpa-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+.block-learningplan-admin .lpa-donut-center-val {
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--bs-heading-color, var(--bs-body-color, #1e293b));
+}
+
+.block-learningplan-admin .lpa-donut-center-lbl {
+    font-size: 0.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--bs-secondary-color, #64748b);
+    margin-top: 2px;
+}
+
+.block-learningplan-admin .lpa-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.block-learningplan-admin .lpa-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    line-height: 1.2;
+}
+
+.block-learningplan-admin .lpa-legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-dot-success {
+    background: #10b981;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.4);
+}
+
+.block-learningplan-admin .lpa-dot-info {
+    background: #0ea5e9;
+    box-shadow: 0 0 4px rgba(14, 165, 233, 0.4);
+}
+
+.block-learningplan-admin .lpa-dot-muted {
+    background: #94a3b8;
+}
+
+.block-learningplan-admin .lpa-legend-label {
+    flex: 1;
+    color: var(--bs-secondary-color, var(--text-muted, #64748b));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.block-learningplan-admin .lpa-legend-val {
+    font-weight: 700;
+    color: var(--bs-heading-color, inherit);
+    white-space: nowrap;
+}
+
+.block-learningplan-admin .lpa-legend-pct {
+    font-size: 0.65rem;
+    color: var(--bs-secondary-color, #94a3b8);
+    font-weight: 500;
+}
+
+/* 7-Day Trend Sparkline */
+.block-learningplan-admin .lpa-trend-wrapper {
+    width: 100%;
+}
+
+.block-learningplan-admin .lpa-trend-svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.block-learningplan-admin .lpa-trend-gridline {
+    stroke: var(--bs-border-color, rgba(0, 0, 0, 0.08));
+    stroke-width: 1;
+    stroke-dasharray: 2 2;
+}
+
+.block-learningplan-admin .lpa-bar-slot {
+    fill: var(--bs-secondary-bg, rgba(0, 0, 0, 0.04));
+}
+
+.block-learningplan-admin .lpa-bar-empty {
+    fill: transparent;
+}
+
+.block-learningplan-admin .lpa-bar-active {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.block-learningplan-admin .lpa-bar-active:hover {
+    fill: url(#lpa-bar-hover-grad);
+    filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.35));
+}
+
+.block-learningplan-admin .lpa-bar-val {
+    fill: var(--bs-primary, var(--primary, #3b82f6));
+}
+
+.block-learningplan-admin .lpa-bar-lbl {
+    fill: var(--bs-secondary-color, var(--text-muted, #64748b));
+}
+
+/* Top Performing Plans Leaderboard */
+.block-learningplan-admin .lpa-top-plans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.block-learningplan-admin .lpa-topplan-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px 7px;
+    background: var(--bs-secondary-bg, rgba(0, 0, 0, 0.03));
+    border-radius: var(--bs-border-radius-sm, 8px);
+    transition: all 0.15s ease;
+}
+
+.block-learningplan-admin .lpa-topplan-row:hover {
+    background: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.06));
+}
+
+.block-learningplan-admin .lpa-topplan-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.block-learningplan-admin .lpa-topplan-medal {
+    font-size: 0.88rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.block-learningplan-admin .lpa-topplan-name {
+    flex: 1;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--bs-heading-color, var(--bs-body-color, inherit));
+    text-decoration: none !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.block-learningplan-admin .lpa-topplan-name:hover {
+    color: var(--bs-primary, var(--primary, #0f6cbf));
+}
+
+.block-learningplan-admin .lpa-topplan-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    padding: 1px 5px;
+    border-radius: 8px;
+}
+
+.block-learningplan-admin .lpa-topplan-bar-wrap {
+    width: 100%;
+    height: 4px;
+    background: var(--bs-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.block-learningplan-admin .lpa-topplan-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.block-learningplan-admin .lpa-topplan-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--bs-secondary-color, var(--text-muted, #64748b));
+}
+
+/* ==========================================================================
+   Dark Mode & High Contrast Polish
+   ========================================================================== */
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-tab-nav,
+body.darkmode .block-learningplan-admin .lpa-tab-nav {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-tab-btn.active,
+body.darkmode .block-learningplan-admin .lpa-tab-btn.active {
+    background: #1e293b;
+    color: #60a5fa;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-stat-card,
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-chart-card,
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-plan-row,
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-learner-plan-card,
+body.darkmode .block-learningplan-admin .lpa-stat-card,
+body.darkmode .block-learningplan-admin .lpa-chart-card,
+body.darkmode .block-learningplan-admin .lpa-plan-row,
+body.darkmode .block-learningplan-admin .lpa-learner-plan-card {
+    background: var(--bs-card-bg, #1e293b);
+    border-color: var(--bs-card-border-color, rgba(255, 255, 255, 0.12));
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-donut-bg,
+body.darkmode .block-learningplan-admin .lpa-donut-bg {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-donut-locked,
+body.darkmode .block-learningplan-admin .lpa-donut-locked {
+    stroke: #475569;
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-donut-center-val,
+body.darkmode .block-learningplan-admin .lpa-donut-center-val {
+    color: #f8fafc;
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-donut-center-lbl,
+body.darkmode .block-learningplan-admin .lpa-donut-center-lbl {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-bar-slot,
+body.darkmode .block-learningplan-admin .lpa-bar-slot {
+    fill: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-trend-gridline,
+body.darkmode .block-learningplan-admin .lpa-trend-gridline {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .block-learningplan-admin .lpa-topplan-row,
+body.darkmode .block-learningplan-admin .lpa-topplan-row {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ==========================================================================
+   Responsive adjustment for narrow blocks / sidebars
+   ========================================================================== */
+@media (max-width: 320px) {
+    .block-learningplan-admin .lpa-stats-grid,
+    .block-learningplan-admin .lpa-nav-grid {
+        grid-template-columns: 1fr;
+    }
+    .block-learningplan-admin .lpa-donut-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+
