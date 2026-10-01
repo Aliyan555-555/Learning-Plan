@@ -1906,4 +1906,361 @@ class api {
 
         return $data;
     }
+
+    /**
+     * Generate and download the executive MIS report in .xlsx format matching the exact template.
+     *
+     * @param int $filterplanid Optional plan ID filter (0 for all plans)
+     * @param int $days Number of days for active/inactive window (default 21)
+     * @return void Exits script after sending file download
+     */
+    public static function export_mis_report(int $filterplanid = 0, int $days = 21): void {
+        global $CFG, $DB;
+
+        require_once($CFG->libdir . '/excellib.class.php');
+
+        // Clean any output buffer before generating binary stream.
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        $now = time();
+        $timesince = $now - ($days * 86400);
+
+        // Fetch plans to report on.
+        if ($filterplanid > 0) {
+            $plan = $DB->get_record('local_learningplan_plan', ['id' => $filterplanid]);
+            $plans = $plan ? [$plan] : [];
+        } else {
+            $plans = self::get_plans();
+        }
+
+        // Pre-fetch all custom user profile fields to avoid N+1 queries.
+        $customfields = [];
+        $profilefields = $DB->get_records('user_info_field', null, '', 'id, shortname, name');
+        if (!empty($profilefields)) {
+            $fieldmap = [];
+            foreach ($profilefields as $pf) {
+                $clean = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $pf->shortname));
+                $fieldmap[$pf->id] = $clean;
+            }
+            $datas = $DB->get_records('user_info_data');
+            foreach ($datas as $d) {
+                if (isset($fieldmap[$d->fieldid])) {
+                    $customfields[$d->userid][$fieldmap[$d->fieldid]] = trim($d->data);
+                }
+            }
+        }
+
+        // Build report data rows.
+        $rows = [];
+
+        foreach ($plans as $plan) {
+            $planid = (int)$plan->id;
+            $userids = self::get_plan_userids($planid);
+            if (empty($userids)) {
+                continue;
+            }
+
+            // Chapters & steps metadata.
+            $chapters = self::get_chapters_with_steps($planid);
+            $totalchapters = count($chapters);
+            $totalsteps = 0;
+            $steptypes = [];
+            foreach ($chapters as $ch) {
+                foreach ($ch->steps as $st) {
+                    $totalsteps++;
+                    $steptypes[$st->steptype ?? 'course'] = true;
+                }
+            }
+
+            // Associated Mode of Trainings.
+            if (count($steptypes) > 1 || isset($steptypes['activity'])) {
+                $modesoftraining = 'Online Courses, Classroom, Blended';
+            } else {
+                $modesoftraining = 'Online Courses';
+            }
+
+            // Plan status (Active / In-Active).
+            $isplanactive = !empty($plan->visible) && (empty($plan->enddate) || $plan->enddate >= $now);
+            $planstatus = $isplanactive ? 'Active' : 'In-Active';
+
+            // Start - End Date.
+            $starttimestamp = !empty($plan->startdate) ? $plan->startdate : $plan->timecreated;
+            $startstr = userdate($starttimestamp, '%d %b %Y');
+            if (!empty($plan->enddate)) {
+                $endstr = userdate($plan->enddate, '%d %b %Y');
+            } else {
+                $endstr = 'In-Progress';
+            }
+            $startenddate = "{$startstr} to {$endstr}";
+
+            // Preload user records.
+            [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'u');
+            $users = $DB->get_records_select('user', "id $insql AND deleted = 0", $inparams);
+
+            // Preload badges earned for this plan in one query.
+            $planbadges = $DB->get_records_sql(
+                "SELECT bi.userid, COUNT(DISTINCT bi.id) as badgecount
+                   FROM {badge_issued} bi
+                   JOIN {local_learningplan_badge} llb ON llb.badgeid = bi.badgeid
+                  WHERE llb.planid = :pid
+               GROUP BY bi.userid",
+                ['pid' => $planid]
+            );
+
+            // Preload progress rows for this plan in one query.
+            $planprogress = $DB->get_records_sql(
+                "SELECT pr.id, pr.userid, pr.stepid, pr.status, pr.starsearned, pr.pointsawarded, pr.timestarted, pr.timecompleted
+                   FROM {local_learningplan_progress} pr
+                   JOIN {local_learningplan_step} s ON s.id = pr.stepid
+                  WHERE s.planid = :pid",
+                ['pid' => $planid]
+            );
+
+            // Group progress by user and step.
+            $userstepstatus = [];
+            $userprogresslist = [];
+            foreach ($planprogress as $pr) {
+                $userstepstatus[$pr->userid][$pr->stepid] = $pr->status;
+                $userprogresslist[$pr->userid][] = $pr;
+            }
+
+            foreach ($userids as $uid) {
+                if (!isset($users[$uid])) {
+                    continue;
+                }
+                $user = $users[$uid];
+
+                // Learner stats.
+                $totals = self::get_user_plan_totals($uid, $planid);
+
+                // Calculate completed chapters for this user.
+                $completedchapters = 0;
+                if ($totalchapters > 0) {
+                    foreach ($chapters as $ch) {
+                        if (empty($ch->steps)) {
+                            continue;
+                        }
+                        $chapcompleted = true;
+                        foreach ($ch->steps as $st) {
+                            $ststatus = $userstepstatus[$uid][$st->id] ?? '';
+                            if ($ststatus !== 'completed') {
+                                $chapcompleted = false;
+                                break;
+                            }
+                        }
+                        if ($chapcompleted) {
+                            $completedchapters++;
+                        }
+                    }
+                }
+
+                // Chapters string: e.g. "Completed 3 out 5 Chapters".
+                $chapstr = "Completed {$completedchapters} out {$totalchapters} " . ($totalchapters === 1 ? 'Chapter' : 'Chapters');
+
+                // Steps string: e.g. "Completed 8 out 15 Steps".
+                $stepstr = "Completed {$totals->completedsteps} out {$totals->totalsteps} " . ($totals->totalsteps === 1 ? 'Step' : 'Steps');
+
+                // Active till last 21 days.
+                $isrecent = false;
+                if (!empty($user->lastlogin) && $user->lastlogin >= $timesince) {
+                    $isrecent = true;
+                }
+                if (!$isrecent && !empty($user->lastaccess) && $user->lastaccess >= $timesince) {
+                    $isrecent = true;
+                }
+                if (!$isrecent && isset($userprogresslist[$uid])) {
+                    foreach ($userprogresslist[$uid] as $upr) {
+                        if ((!empty($upr->timestarted) && $upr->timestarted >= $timesince) ||
+                            (!empty($upr->timecompleted) && $upr->timecompleted >= $timesince)) {
+                            $isrecent = true;
+                            break;
+                        }
+                    }
+                }
+                $activelast21days = $isrecent ? 'Yes' : 'No';
+
+                // Learner Plan Status.
+                if ($totals->totalsteps > 0 && $totals->completedsteps >= $totals->totalsteps) {
+                    $userplanstatus = 'Completed';
+                } else if ($totals->completedsteps > 0) {
+                    $userplanstatus = 'In-Progress';
+                } else {
+                    $hasstarted = false;
+                    if (isset($userprogresslist[$uid])) {
+                        foreach ($userprogresslist[$uid] as $upr) {
+                            if (in_array($upr->status, ['inprogress', 'completed'])) {
+                                $hasstarted = true;
+                                break;
+                            }
+                        }
+                    }
+                    $userplanstatus = $hasstarted ? 'In-Progress' : 'Not Started';
+                }
+
+                // Completion %.
+                $completionpct = $totals->percent . '%';
+
+                // Points & Stars.
+                $points = (int)$totals->points;
+                $stars = (int)$totals->stars;
+
+                // Badges.
+                $badgescount = isset($planbadges[$uid]) ? (int)$planbadges[$uid]->badgecount : 0;
+
+                // User profile attributes.
+                $cf = $customfields[$uid] ?? [];
+                $dept = !empty($user->department) ? $user->department : ($cf['department'] ?? '');
+                $jobpos = $cf['jobposition'] ?? $cf['job_position'] ?? $cf['position'] ?? (!empty($user->institution) ? $user->institution : '');
+                $region = $cf['region'] ?? '';
+                $city = !empty($user->city) ? $user->city : ($cf['city'] ?? '');
+                $branch = $cf['branch'] ?? '';
+                $lob = $cf['lineofbusiness'] ?? $cf['line_of_business'] ?? $cf['lob'] ?? '';
+                $empcode = !empty($user->idnumber) ? $user->idnumber : ($cf['employeecode'] ?? $cf['employee_code'] ?? '');
+                $email = $user->email;
+
+                $rows[] = [
+                    'B' => format_string($plan->name),
+                    'C' => fullname($user),
+                    'D' => $chapstr,
+                    'E' => $stepstr,
+                    'F' => $planstatus,
+                    'G' => $modesoftraining,
+                    'H' => $startenddate,
+                    'I' => $activelast21days,
+                    'J' => $userplanstatus,
+                    'K' => $completionpct,
+                    'L' => $points,
+                    'M' => $stars,
+                    'N' => $badgescount,
+                    'O' => $dept,
+                    'P' => $jobpos,
+                    'Q' => $region,
+                    'R' => $city,
+                    'S' => $branch,
+                    'T' => $lob,
+                    'U' => $empcode,
+                    'V' => $email,
+                ];
+            }
+        }
+
+        // Locate template file.
+        $templatecandidates = [
+            __DIR__ . '/../templates/MIS Report for Learning Plan.xlsx',
+            __DIR__ . '/../MIS Report for Learning Plan.xlsx',
+            $CFG->dirroot . '/local/learningplan/templates/MIS Report for Learning Plan.xlsx',
+            $CFG->dirroot . '/local/learningplan/MIS Report for Learning Plan.xlsx',
+            dirname($CFG->dirroot) . '/MIS Report for Learning Plan.xlsx',
+            'c:/xampp/htdocs/MoodleWindowsInstaller-latest-404/MIS Report for Learning Plan.xlsx',
+        ];
+
+        $templatepath = null;
+        foreach ($templatecandidates as $candidate) {
+            if (file_exists($candidate) && is_readable($candidate)) {
+                $templatepath = $candidate;
+                break;
+            }
+        }
+
+        if ($templatepath) {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatepath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Clear sample rows starting from row 3.
+            $maxrow = max(4, $sheet->getHighestRow());
+            for ($r = 3; $r <= $maxrow; $r++) {
+                for ($col = 'B'; $col <= 'V'; $col++) {
+                    $sheet->setCellValue($col . $r, null);
+                }
+            }
+        } else {
+            // Fallback: create fresh spreadsheet matching exact template.
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Sheet1');
+
+            // Category headers.
+            $sheet->mergeCells('D1:H1');
+            $sheet->setCellValue('D1', 'Learning Plan Attributes');
+            $sheet->mergeCells('J1:N1');
+            $sheet->setCellValue('J1', 'Learning Plan Attributes with respect to User');
+            $sheet->mergeCells('O1:U1');
+            $sheet->setCellValue('O1', 'User Profile Attributes');
+
+            // Column headers.
+            $headers = [
+                'B' => 'Learning Plan',
+                'C' => 'Learner',
+                'D' => 'No. of Chapters',
+                'E' => 'No. of Steps',
+                'F' => 'Status',
+                'G' => 'Associated Mode of Trainings',
+                'H' => 'Start - End Date',
+                'I' => 'Active till last 21 days',
+                'J' => 'Status',
+                'K' => 'Completion %',
+                'L' => 'Points',
+                'M' => 'Stars',
+                'N' => 'Badges',
+                'O' => 'Department',
+                'P' => 'Job Position',
+                'Q' => 'Region',
+                'R' => 'City',
+                'S' => 'Branch',
+                'T' => 'Line of Business',
+                'U' => 'Employee Code',
+                'V' => 'Email',
+            ];
+            foreach ($headers as $col => $header) {
+                $sheet->setCellValue($col . '2', $header);
+            }
+
+            // Styles.
+            $headerstyle = [
+                'font' => ['bold' => true, 'name' => 'Calibri', 'size' => 11],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+            ];
+            $sheet->getStyle('D1:H1')->applyFromArray($headerstyle);
+            $sheet->getStyle('J1:N1')->applyFromArray($headerstyle);
+            $sheet->getStyle('O1:U1')->applyFromArray($headerstyle);
+
+            // Column widths.
+            $widths = [
+                'B' => 15, 'C' => 15, 'D' => 27, 'E' => 24, 'F' => 15, 'G' => 15, 'H' => 27,
+                'I' => 27, 'J' => 15, 'K' => 15, 'L' => 15, 'M' => 15, 'N' => 15, 'O' => 15,
+                'P' => 15, 'Q' => 15, 'R' => 15, 'S' => 15, 'T' => 15, 'U' => 15, 'V' => 25,
+            ];
+            foreach ($widths as $col => $w) {
+                $sheet->getColumnDimension($col)->setWidth($w);
+            }
+        }
+
+        // Populate rows starting from row 3.
+        $currentrow = 3;
+        foreach ($rows as $row) {
+            foreach ($row as $col => $val) {
+                $sheet->setCellValue($col . $currentrow, $val);
+            }
+            $currentrow++;
+        }
+
+        // Send headers for download.
+        if ($filterplanid > 0 && !empty($plans) && !empty($plans[0]->name)) {
+            $downloadfilename = 'MIS Report - ' . clean_filename($plans[0]->name) . '.xlsx';
+        } else {
+            $downloadfilename = 'MIS Report for Learning Plan.xlsx';
+        }
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $downloadfilename . '"');
+        header('Cache-Control: max-age=0, no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
+        exit;
+    }
 }
+

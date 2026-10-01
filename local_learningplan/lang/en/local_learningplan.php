@@ -25,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = 'Learning Plan';
 $string['mylearningpath'] = 'My Learning Path';
 $string['managelearningplans'] = 'Manage Learning Plans';
+$string['downloadmisreport'] = 'Download MIS Report';
 
 // Capabilities.
 $string['learningplan:manage'] = 'Manage learning plans';

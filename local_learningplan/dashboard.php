@@ -43,6 +43,14 @@ global $USER, $DB, $PAGE, $OUTPUT, $SITE;
 $planid = optional_param('planid', 0, PARAM_INT);
 $days = optional_param('days', 21, PARAM_INT);
 $export = optional_param('export', 0, PARAM_BOOL);
+$exportmis = optional_param('exportmis', 0, PARAM_BOOL);
+
+// MIS Excel Report (.xlsx) Export Handler.
+if ($exportmis) {
+    require_sesskey();
+    api::export_mis_report($planid, $days);
+    exit;
+}
 
 // Fetch complete live status analytics data from database.
 $dashboarddata = api::get_status_dashboard_data($planid, $days);
@@ -152,6 +160,9 @@ $totalusers = $DB->count_records('user', ['deleted' => 0]);
 
             <!-- Action Buttons -->
             <div class="lp-hero-actions">
+                <a href="<?php echo new moodle_url($pageurl, ['exportmis' => 1, 'sesskey' => sesskey()]); ?>" class="lp-btn-hero-action lp-btn-mis-action" title="Download MIS Report (.xlsx)">
+                    <i class="fa fa-file-excel-o mr-1 text-success"></i><span><?php echo local_learningplan_str('downloadmisreport', 'Download MIS Report'); ?></span>
+                </a>
                 <a href="<?php echo new moodle_url($pageurl, ['export' => 1, 'sesskey' => sesskey()]); ?>" class="lp-btn-hero-action" title="Export CSV Summary">
                     <i class="fa fa-download mr-1"></i><span>CSV</span>
                 </a>
@@ -292,7 +303,15 @@ $totalusers = $DB->count_records('user', ['deleted' => 0]);
                             <?php echo s($plan->name); ?>
                         </h4>
                     </div>
-                    <span class="badge badge-pill badge-light border text-muted small px-2 py-1"><?php echo $plan->total_steps; ?> Steps</span>
+                    <div class="lp-donut-header-actions">
+                        <span class="badge badge-pill badge-light border text-muted small px-2 py-1 mr-1"><?php echo $plan->total_steps; ?> Steps</span>
+                        <a href="<?php echo new moodle_url($pageurl, ['exportmis' => 1, 'planid' => $plan->id, 'sesskey' => sesskey()]); ?>" 
+                           class="lp-card-download-btn" 
+                           title="Download full report for <?php echo s($plan->name); ?> (.xlsx)">
+                            <i class="fa fa-download"></i>
+                            <span class="lp-card-download-text">Report</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Donut Chart Canvas Container -->
