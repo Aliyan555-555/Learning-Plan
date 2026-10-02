@@ -429,11 +429,18 @@ if ($planid) {
                                 <!-- 1. Learning Plan -->
                                 <td class="lp-td-planname">
                                     <div class="d-flex align-items-center">
-                                        <span class="lp-plan-indicator mr-2" style="background: <?php echo $r->isplanactive ? '#10b981' : '#94a3b8'; ?>;"></span>
-                                        <div>
+                                        <div class="lp-plan-icon-badge mr-2" title="<?php echo s($r->planname); ?>">
+                                            <?php echo !empty($r->planiconhtml) ? $r->planiconhtml : api::render_plan_icon($r->plan, 'lp-mis-table-icon-inner', '', false); ?>
+                                        </div>
+                                        <div class="lp-plan-info-box">
                                             <a href="<?php echo new moodle_url('/local/learningplan/index.php', ['id' => $r->planid]); ?>" class="lp-plan-link font-weight-bold text-dark" title="View Journey Map">
                                                 <?php echo s($r->planname); ?>
                                             </a>
+                                            <div class="lp-plan-sub-meta small text-muted d-flex align-items-center">
+                                                <span class="lp-plan-indicator mr-1" style="background: <?php echo $r->isplanactive ? '#10b981' : '#94a3b8'; ?>;"></span>
+                                                <span class="mr-1"><?php echo $r->planstatus; ?></span>
+                                                <span class="text-slate">&bull; #<?php echo $r->planid; ?></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>

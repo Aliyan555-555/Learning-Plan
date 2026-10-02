@@ -1155,12 +1155,13 @@ class api {
             ];
         }
 
-        // 4. Preset Theme (ocean, sunset, forest, candy)
+        // 4. Preset Theme (ocean, sunset, forest, candy, island)
         $themeemojis = [
             'ocean'  => '🌊',
             'sunset' => '🌅',
             'forest' => '🌲',
             'candy'  => '🍭',
+            'island' => '🏝️',
         ];
         if (isset($themeemojis[$basecode])) {
             return [
@@ -2144,6 +2145,9 @@ class api {
 
                 $record = (object)[
                     'planid' => $planid,
+                    'plan' => $plan,
+                    'planicon' => $plan->icon ?? $plan->coverimage ?? 'ocean',
+                    'planiconhtml' => self::render_plan_icon($plan, 'lp-mis-table-icon-inner', '', false),
                     'planname' => format_string($plan->name),
                     'planstatus' => $planstatus,
                     'isplanactive' => $isplanactive,
